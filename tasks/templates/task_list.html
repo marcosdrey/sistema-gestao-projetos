@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Listagem de Tarefas{% endblock %}
+
+{% block content %}
+<h3 class="display-6">{% if perms.tasks.view_task %}Todas as{% else %}Minhas{% endif %} Tarefas</h3>
+<hr>
+<div class="row my-3">
+    <div class="col-lg-4 col-12">
+        <form method="get" action="{% url 'task_list' %}">
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="search" class="form-control" id="title" name="title" value="{{ request.GET.title }}" placeholder="Nome da Tarefa">
+                    <label for="title">Nome da Tarefa</label>
+                </div>
+                <div class="form-floating">
+                    <input type="search" class="form-control" id="project" name="project" value="{{ request.GET.project }}" placeholder="Nome do Projeto">
+                    <label for="project">Nome do Projeto</label>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-lg-8 col-12">
+        <form method="get" action="{% url 'task_list' %}">
+            <div class="input-group">
+                <select class="form-select" name="priority">
+                    <option value="" {% if not request.GET.priority%} selected {% endif %}>Todas as Prioridades</option>
+                    {% for value, display in priorities %}
+                    <option value="{{value}}" {% if request.GET.priority == value|stringformat:'s' %} selected {% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select" name="status">
+                    <option value="" {% if not request.GET.status%} selected {% endif %}>Todos os Status</option>
+                    {% for value, display in status %}
+                    <option value="{{value}}" {% if request.GET.status == value|stringformat:'s' %} selected {% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="deadline" name="deadline" value="{{ request.GET.deadline }}">
+                    <label for="deadline">Prazo até:</label>
+                </div>
+                <select class="form-select" name="state">
+                    <option value="" {% if not request.GET.state %} selected {% endif %}>Todos os Estados</option>
+                    <option value="delayed" {% if request.GET.state == 'delayed' %} selected {% endif %}>Atrasados</option>
+                    <option value="imminent" {% if request.GET.state == 'imminent' %} selected {% endif %}>Iminentes</option>
+                    <option value="plenty-time" {% if request.GET.state == 'plenty-time' %} selected {% endif %}>Muito tempo restante</option>
+                </select>
+
+                <button type="submit" class="btn btn-info">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% if not tasks %}
+<p>Nenhuma tarefa foi encontrada.</p>
+{% else %}
+<section class="table-responsive">
+    <table class="table table-bordered">
+        <caption>Lista de Tarefas</caption>
+        <thead>
+            <tr>
+                <th scope="col">Tarefa</th>
+                <th scope="col">Projeto</th>
+                <th scope="col">Prioridade</th>
+                <th scope="col">Status</th>
+                <th scope="col">Prazo</th>
+                <th scope="col">Número de Responsáveis</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr class="{% if task.status == 'DONE' %}table-success table-active{% endif %}">
+                <td>{{ task.title }}
+                    {% if task.status != 'DONE' %}
+                    {% if task.deadline < current_time %}
+                        <span title="Atrasado"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                    {% elif task.deadline <= imminent_time %}
+                        <span title="Iminente"><i class="bi bi-exclamation-circle text-warning"></i></span>
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td>{{ task.project.title }}</td>
+                <td class="{% if task.priority == 'HIGH'%}table-danger{% elif task.priority == 'MEDIUM'%}table-warning{% else %}table-info{% endif %}">{{ task.get_priority_display }}</td>
+                <td>{{ task.get_status_display }}</td>
+                <td>{{ task.deadline|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ task.responsible_people.all|length }} {% if user in task.responsible_people.all %} <span class="badge text-bg-success">Responsável</span>{%endif%}</td>
+                <td>
+                    <a href="{% url 'task_detail' task.id %}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
+
+                    {% if perms.tasks.change_task or task.is_admin %}
+                    <a href="{% url 'task_update' task.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pen"></i></a>
+                    {% endif %}
+                    {% if perms.tasks.delete_task or task.is_admin %}
+                    <a href="{% url 'task_delete' task.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+{% include 'components/_pagination.html' with page_name='page' %}
+{% endif %}
+
+{% endblock %}

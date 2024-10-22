@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualizar Documento{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">
+                {{ object.name }}
+                {% if perms.documents.change_document %}
+                <a href="{% url 'document_update' object.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pen"></i></a>
+                {% endif %}
+                {% if perms.documents.delete_document %}
+                <a href="{% url 'document_delete' object.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                {% endif %}
+            </h3>
+            <p class="card-text"><strong>Baixar Arquivo: </strong><a href="{{ document.file.url }}">{{ document.file }}</a></p>
+            <p class="card-text"><strong>Criado em: </strong>{{ object.created_at }}</p>
+            <p class="card-text"><strong>Descrição: </strong>{{ object.description }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

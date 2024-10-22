@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Membro{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex flex-column align-items-start">
+    <div class="container card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">Novo Membro ao Projeto</h3>
+            <h5 class="text-muted">{{project.title}}</h5>
+            <form action="{% url 'project_member_create' project.id %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Adicionar Usuário</button>
+            </form>
+        </div>
+    </div>
+    <a href="{% url 'project_detail' project.id %}" class="btn btn-light">Voltar para o projeto</a>
+</div>
+{% endblock %}

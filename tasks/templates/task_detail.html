@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Visualizar Tarefa{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">
+                {{ object.title }}
+                {% if perms.tasks.change_task or is_project_admin %}
+                <a href="{% url 'task_update' object.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pen"></i></a>
+                {% endif %}
+                {% if perms.tasks.delete_task or is_project_admin %}
+                <a href="{% url 'task_delete' object.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                {% endif %}
+            </h3>
+            <h5 class="card-subtitle mb-3">
+                Projeto: {{ object.project }}
+            </h5>
+            <p class="card-text">
+                <strong>Prazo: </strong>
+                {{ object.deadline }}
+                {% if object.deadline < current_time %}
+                    <span title="Atrasado"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                {% elif object.deadline <= imminent_time %}
+                    <span title="Iminente"><i class="bi bi-exclamation-circle text-warning"></i></span>
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Prioridade: </strong><span class="badge {% if object.priority == 'HIGH'%}text-bg-danger{% elif object.priority == 'MEDIUM'%}text-bg-warning{% else %}text-bg-info{% endif %}">{{ object.get_priority_display }}</span></p>
+            <p class="card-text"><strong>Status: </strong>{{ object.get_status_display }}</p>
+            <p class="card-text"><strong>Responsáveis: </strong>{% for member in object.responsible_people.all %}{{member}}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            <p class="card-text"><strong>Criado em: </strong>{{ object.created_at }}</p>
+            {% if object.description %}
+            <p class="card-text"><strong>Descrição: </strong>{{ object.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{% url 'project_detail' object.project.id %}" class="btn btn-light">Voltar para detalhes do projeto</a>
+</div>
+{% endblock %}

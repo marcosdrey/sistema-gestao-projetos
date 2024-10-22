@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{% endblock %}
+{% block title %}Visualizar Projeto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">
+                {{ object.title }}
+                {% if perms.projects.change_project or is_project_admin %}
+                <a href="{% url 'project_update' object.id %}" class="btn btn-warning btn-sm"><i
+                        class="bi bi-pen"></i></a>
+                {% endif %}
+                {% if perms.projects.delete_project %}
+                <a href="{% url 'project_delete' object.id %}" class="btn btn-danger btn-sm"><i
+                        class="bi bi-trash"></i></a>
+                {% endif %}
+            </h3>
+            <p class="card-text"><strong>Status: </strong>{{ object.get_status_display }}</p>
+            <p class="card-text">
+                <strong>Prioridade: </strong><span class="badge {% if object.priority == 'HIGH'%}text-bg-danger{% elif object.priority == 'MEDIUM'%}text-bg-warning{% else %}text-bg-info{% endif %}">{{ object.get_priority_display }}</span></p>
+            <p class="card-text"><strong>Criado em: </strong>{{ object.created_at.date }}</p>
+            <p class="card-text"><strong>Prazo: </strong>
+                {{ object.deadline }}
+                {% if object.deadline < current_time %}
+                    <span title="Atrasado"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                {% elif object.deadline <= imminent_time %}
+                    <span title="Iminente"><i class="bi bi-exclamation-circle text-warning"></i></span>
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Descrição: </strong>{{ object.description }}</p>
+        </div>
+    </div>
+    {% if perms.projects.view_project or is_project_member %}
+    <h5 class="fs-5 d-flex align-items-center gap-1">
+        Tarefas
+        <span class="badge text-bg-secondary rounded-pill">{{ object.tasks.all|length }}</span>
+        {% if perms.tasks.add_task or is_project_admin %}
+        {% if object.status != "DONE" %}
+        <a href="{% url 'project_task_create' object.id %}" class="btn btn-info btn-sm"><i class="bi bi-plus"></i></a>
+        {% endif %}
+        {% endif %}
+    </h5>
+    <div>
+        {% if object.tasks.all %}
+        <section class="table-responsive">
+            <table class="table table-bordered">
+                <caption>Tarefas do Projeto</caption>
+                <thead>
+                    <tr class="table-info">
+                        <th scope="col">Título</th>
+                        <th scope="col">Prioridade</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Prazo</th>
+                        <th scope="col">Número de Responsáveis</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in object.tasks.all %}
+                    <tr class="{% if task.status == 'DONE' %}table-success table-active{% endif %}">
+                        <td>{{ task.title }}
+                            {% if task.status != 'DONE' %}
+                            {% if task.deadline < current_time %}
+                                <span title="Atrasado"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                            {% elif task.deadline <= imminent_time %}
+                                <span title="Iminente"><i class="bi bi-exclamation-circle text-warning"></i></span>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="{% if task.priority == 'HIGH'%}table-danger{% elif task.priority == 'MEDIUM'%}table-warning{% else %}table-info{% endif %}">{{ task.get_priority_display|safe }}</td>
+                        <td>{{ task.get_status_display|safe }}</td>
+                        <td>{{ task.deadline|date:"SHORT_DATE_FORMAT" }}</td>
+                        <td>{{ task.responsible_people.all|length }} {% if user in task.responsible_people.all %} <span class="badge text-bg-success">Responsável</span>{%endif%}</td>
+                        <td>
+                            <a href="{% url 'task_detail' task.id %}" class="btn btn-info btn-sm"><i
+                                    class="bi bi-eye"></i></a>
+                            {% if perms.tasks.change_task or is_project_admin %}
+                            <a href="{% url 'task_update' task.id %}" class="btn btn-warning btn-sm"><i
+                                    class="bi bi-pen"></i></a>
+                            {% endif %}
+                            {% if perms.tasks.delete_task or is_project_admin %}
+                            <a href="{% url 'task_delete' task.id %}" class="btn btn-danger btn-sm"><i
+                                    class="bi bi-trash"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <div id="calendar" class="mx-auto mb-5"></div>
+        {% else %}
+        <p>Não há tarefas registradas para este projeto.</p>
+        {% endif %}
+    </div>
+
+    
+
+    {% if object.documents.all %}
+    <h5 class="fs-5 d-flex align-items-center gap-1">
+        Documentos
+        <span class="badge text-bg-secondary rounded-pill">{{ object.documents.all|length }}</span>
+    </h5>
+    <div class="mb-4">
+        <ul class="list-group">
+            {% for document in object.documents.all %}
+            <li class="list-group-item">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <a href="{{ document.file.url }}">{{ document.name }}</a>
+                    </h6>
+                    <p class="card-text">{{ document.description}}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    
+    <h5 class="fs-5 d-flex align-items-center gap-1">
+        Membros
+        <span class="badge text-bg-secondary rounded-pill">{{ object.members.all|length }}</span>
+        {% if perms.projects.add_projectmember %}
+        <a href="{% url 'project_member_create' object.id %}" class="btn btn-info btn-sm"><i class="bi bi-plus"></i></a>
+        {% endif %}
+    </h5>
+    {% if object.members.all %}
+    <div class="mb-4">
+        <ul class="list-group">
+            {% for member in object.members.all %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ member.user.username }} <span
+                        class="badge {% if member.role == 'ADMIN' %}text-bg-info{% else %}text-bg-secondary{% endif %}">{{ member.get_role_display|safe }}</span></span>
+                <span>
+                    {% if perms.projects.change_projectmember %}
+                    <a href="{% url 'project_member_update' member.id %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pen"></i>
+                    </a>
+                    {% endif %}
+                    {% if perms.projects.delete_projectmember %}
+                    <a href="{% url 'project_member_delete' member.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {% endif %}
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p>Esse projeto ainda não tem nenhum membro associado.</p>
+    {% endif %}
+
+    <h5 class="fs-5 d-flex align-items-center gap-1">
+        Comentários
+        <span class="badge text-bg-secondary rounded-pill">{{ object.comments.all|length }}</span>
+        <button class="btn btn-info btn-sm" id="show-comment-container"><i class="bi bi-plus"></i></button>
+    </h5>
+
+    <div id="comment-container" class="d-none">
+        <form action="{% url 'project_comment_create' object.id %}" method="post" class="mb-3" id="new_comment_form">
+            {% csrf_token %}
+            <div id="new_comment_div" class="mb-2"></div>
+            <input type="hidden" name="comment" id="comment">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success">Enviar comentário</button>
+            </div>
+
+        </form>
+    </div>
+    {% if object.comments.all %}
+
+    <div class="mb-3 py-2 px-3" id="comment_page">
+    {% for comment in comment_page %}
+    
+        <div class="card mb-3">
+            <div class="d-flex justify-content-between align-items-center card-header">
+                <h6 class="card-title m-0">
+                    {{ comment.author }} {% if comment.created_at != comment.updated_at %} <span class="text-muted">(Editado
+                        há {{ comment.updated_at|timesince }})</span>{% endif %}
+                </h6>
+                <p class="m-0">
+                    {% if comment.author == user %}
+                    <a href="{% url 'project_comment_update' comment.id %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pen"></i>
+                    </a>
+                    {% endif %}
+                    {% if comment.author == user or perms.projects.delete_projectcomment %}
+                    <a href="{% url 'project_comment_delete' comment.id %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {% endif %}
+            
+                    {{ comment.created_at }}
+                </p>
+            
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ comment.comment|safe }}</p>
+            </div>
+        </div>
+
+    
+    {% endfor %}
+    </div>
+    {% if comment_page.paginator.num_pages > 1 %}
+    {% include 'components/_pagination.html' with page_obj=comment_page page_name='comment_page' %}
+    {% endif %}
+    {% else %}
+    <p>Esse projeto ainda não tem comentários.</p>
+    {% endif %}
+
+    {% if perms.projects.view_projectlog or is_project_admin %}
+    {% if object.logs.all %}
+    <h5 class="fs-5 d-flex align-items-center gap-1" id="log_page">
+        Histórico de Alterações
+        <span class="badge text-bg-secondary rounded-pill">{{ object.logs.all|length }}</span>
+    </h5>
+    <div class="mb-4">
+        <ul class="list-group mb-3">
+            {% for log in log_page %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ log.description }}</span>
+                <small class="text-muted">{{ log.created_at }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if log_page.paginator.num_pages > 1 %}
+        {% include 'components/_pagination.html' with page_obj=log_page page_name='log_page' %}
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% endif %}
+</div>
+
+<a href="{% url 'project_list' %}" class="btn btn-light">Voltar para a listagem de projetos</a>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const quill = new Quill('#new_comment_div', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline'],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        document.querySelector('#show-comment-container').addEventListener('click', () => {
+            document.querySelector('#comment-container').classList.toggle('d-none')
+        })
+
+        const commentForm = document.querySelector('#new_comment_form')
+
+        commentForm.addEventListener('submit', () => {
+            document.querySelector('#comment').value = quill.root.innerHTML
+        })
+
+        const calendarElement = document.querySelector('#calendar')
+        const calendarTasks =  JSON.parse('{{ calendar_tasks|safe }}')
+        const calendarEvents = calendarTasks.map(task => {
+            return {
+                title: task.title,
+                start: task.deadline,
+                allDay: true,
+                color: task.color
+            }
+        })
+
+        const calendar = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            events: calendarEvents,
+            aspectRatio: 4,
+            locale: 'pt-br',
+            buttonText: {
+                today: 'Hoje'
+            }
+        })
+        calendar.render()
+    })
+
+
+</script>
+{% endblock %}

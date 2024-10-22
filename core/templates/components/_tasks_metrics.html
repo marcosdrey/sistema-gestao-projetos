@@ -1,0 +1,125 @@
+<div class="card">
+    <div class="card-header">
+        <h2>Tarefas</h2>
+    </div>
+    <div class="card-body">
+        {% if total_delayed_tasks > 0 %}
+        <div class="alert alert-danger" role="alert">
+            Atenção: Há {{ total_delayed_tasks }} tarefa(s) atrasada(s). <a href="{% url 'task_list' %}?state=delayed">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        {% if total_imminent_tasks > 0 %}
+        <div class="alert alert-warning" role="alert">
+            Atenção: Há {{ total_imminent_tasks }} tarefa(s) que estão chegando próximo ao seu prazo final. <a href="{% url 'task_list' %}?state=imminent">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        {% if total_tasks_by_status.PAUSED > 0 %}
+        <div class="alert alert-secondary" role="alert">
+            Atenção: Há {{ total_tasks_by_status.PAUSED }} tarefa(s) que estão pausadas. <a href="{% url 'task_list' %}?status=PAUSED">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        <div class="row mb-2">
+            <div class="col-md-3">
+                <div class="card bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_tasks_by_status.TOTAL }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Concluídos</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_tasks_by_status.DONE }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title">Desenvolvendo</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_tasks_by_status.DEVELOPING }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">A fazer</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_tasks_by_status.TO_DO }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center align-items-center my-4">
+            <div class="col-lg-6 col-md-12 text-center">
+                <h5 class="mb-3">Tarefas por Prioridade</h5>
+                <div class="embed-responsive embed-responsive-1by1" style="width: 300px; display: inline-block; height: 300px;">
+                    <canvas id="task_priority_chart" class="embed-responsive-item"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12 text-center">
+                <h5 class="mb-3">Projetos com Mais Tarefas Pendentes</h5>
+                <div class="embed-responsive embed-responsive-1by1" style="width: 500px; display: inline-block;">
+                    <canvas id="projects_with_most_pending_tasks" class="embed-responsive-item"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', ()=> {
+        const ctxTaskPriority = document.getElementById('task_priority_chart').getContext('2d')
+        const totalTasksByPriority = JSON.parse('{{ total_tasks_by_priority|safe }}')
+        const priorityTaskChart = new Chart(ctxTaskPriority, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(totalTasksByPriority),
+                datasets: [{
+                    label: 'Tarefas por Prioridade',
+                    data: Object.values(totalTasksByPriority),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+            }
+        })
+
+        const ctxProjectsMostPendingTasks = document.getElementById('projects_with_most_pending_tasks').getContext('2d')
+        const projectsWithMostPendingTasks = JSON.parse('{{ projects_with_most_pending_tasks|safe }}')
+        const mostTasksChart = new Chart(ctxProjectsMostPendingTasks, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(projectsWithMostPendingTasks),
+                datasets: [{
+                        label: 'Projetos com mais tarefas pendentes',
+                        data: Object.values(projectsWithMostPendingTasks),
+                        backgroundColor: [
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(153, 102, 255, 1)'
+                        ]
+                    }]
+            },
+            options: {
+                y: {
+                    beginAtZero: true,
+                }
+            }
+        })
+    })
+</script>

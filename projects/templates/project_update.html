@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Projeto{% endblock %}
+
+{% block content %}
+<div class="container float-start card mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Editar Projeto</h3>
+        <form action="{% url 'project_update' object.id %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Confirmar Edição</button>
+        </form>
+    </div> 
+</div>
+<a href="{% url 'project_detail' object.id %}" class="btn btn-light">Voltar para os detalhes do projeto</a>
+{% endblock %}

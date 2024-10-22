@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Deletar Comentário{% endblock %}
+
+{% block content %}
+<div class="container float-start card mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Tem certeza que deseja deletar esse comentário?</h3>
+        <p class="card-text">{{ object.comment|safe }}</p>
+
+        <form action="{% url 'project_comment_delete' object.id %}" method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Deletar</button>
+                <a href="{% url 'project_detail' object.project.id %}" class="btn btn-light">Voltar para os detalhes do projeto.</a>
+            </div>
+        </form>
+    </div> 
+</div>
+
+{% endblock %}

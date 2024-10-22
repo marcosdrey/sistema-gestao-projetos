@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Listagem de Projetos{% endblock %}
+
+{% block content %}
+<h3 class="display-6">Todos os Projetos</h3>
+<hr>
+<div class="row my-3">
+    <div class="col-lg-4 col-12">
+        <form method="get" action="{% url 'project_list' %}">
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="search" class="form-control" id="title" name="title" value="{{ request.GET.title }}" placeholder="Título do Projeto">
+                    <label for="title">Título do Projeto</label>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% if perms.projects.add_project %}
+    <div class="col-lg-8 col-12 d-flex align-items-center justify-content-end">
+        <a href="{% url 'project_create' %}" class="btn btn-info d-flex align-items-center">
+            <i class="bi bi-plus fs-5"></i>Criar Projeto
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row mb-3">
+    <div class="col-lg-8 col-12">
+        <form method="get" action="{% url 'project_list' %}">
+            <div class="input-group">
+                <select class="form-select" name="priority">
+                    <option value="" {% if not request.GET.priority%} selected {% endif %}>Todas as Prioridades</option>
+                    {% for value, display in priorities %}
+                    <option value="{{value}}" {% if request.GET.priority == value|stringformat:'s' %} selected {% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select" name="status">
+                    <option value="" {% if not request.GET.status%} selected {% endif %}>Todos os Status</option>
+                    {% for value, display in status %}
+                    <option value="{{value}}" {% if request.GET.status == value|stringformat:'s' %} selected {% endif %}>{{display}}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="deadline" name="deadline" value="{{ request.GET.deadline }}">
+                    <label for="deadline">Prazo até:</label>
+                </div>
+                <select class="form-select" name="state">
+                    <option value="" {% if not request.GET.state%} selected {% endif %}>Todos os Estados</option>
+                    <option value="delayed" {% if request.GET.state == 'delayed' %} selected {% endif %}>Atrasados</option>
+                    <option value="imminent" {% if request.GET.state == 'imminent' %} selected {% endif %}>Iminentes</option>
+                    <option value="plenty-time" {% if request.GET.state == 'plenty-time' %} selected {% endif %}>Muito tempo restante</option>
+                </select>
+
+                <button type="submit" class="btn btn-info">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not projects %}
+<p>Nenhum projeto foi encontrado.</p>
+{% else %}
+<section class="table-responsive">
+    <table class="table table-bordered">
+        <caption>Lista de Projetos</caption>
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Título</th>
+                <th scope="col">Prioridade</th>
+                <th scope="col">Status</th>
+                <th scope="col">Prazo</th>
+                <th scope="col">Número de Membros</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr class="{% if project.status == 'DONE' %}table-success table-active{% endif %}">
+                <th scope="row">{{ project.id }}</th>
+                <td>{{ project.title }}
+                    {% if project.status != 'DONE' %}
+                    {% if project.deadline < current_time %}
+                        <span title="Atrasado"><i class="bi bi-exclamation-triangle-fill text-danger"></i></span>
+                    {% elif project.deadline <= imminent_time %}
+                        <span title="Iminente"><i class="bi bi-exclamation-circle text-warning"></i></span>
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td class="{% if project.priority == 'HIGH'%}table-danger{% elif project.priority == 'MEDIUM'%}table-warning{% else %}table-info{% endif %}">{{ project.get_priority_display }}</td>
+                <td>{{ project.get_status_display }}</td>
+                <td>{{ project.deadline|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ project.members.all|length }} 
+                    {% for member in project.members.all %}
+                        {% if member.user == user %}
+                        <span class="badge text-bg-success">{% if project.is_admin %}Admin{% else %}Membro</span>{%endif%}
+                    {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{% url 'project_detail' project.id %}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
+                    {% if perms.projects.change_project or project.is_admin %}
+                    <a href="{% url 'project_update' project.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pen"></i></a>
+                    {% endif %}
+                    {% if perms.projects.delete_project %}
+                    <a href="{% url 'project_delete' project.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+{% include 'components/_pagination.html' with page_name='page' %}
+{% endif %}
+
+{% endblock %}

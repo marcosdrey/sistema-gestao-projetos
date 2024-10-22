@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Membro{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex flex-column align-items-start">
+    <div class="container card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">Editar função de {{ object.user.username }}</h3>
+            <form action="{% url 'project_member_update' object.id %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Editar</button>
+            </form>
+        </div>
+    </div>
+    <a href="{% url 'project_detail' object.project.id %}" class="btn btn-light">Voltar para o projeto</a>
+</div>
+{% endblock %}

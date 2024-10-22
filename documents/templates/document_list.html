@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Listagem de Documentos{% endblock %}
+
+{% block content %}
+<h3 class="display-6">Todos os Documentos</h3>
+<hr>
+<div class="row my-3">
+    <div class="col-lg-4 col-12">
+        <form method="get" action="{% url 'document_list' %}">
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="search" class="form-control" id="name" name="name" value="{{ request.GET.name }}" placeholder="Nome do Documento">
+                    <label for="name">Nome do Documento</label>
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% if perms.documents.add_document %}
+    <div class="col-lg-8 col-12 d-flex align-items-center justify-content-end">
+        <a href="{% url 'document_create' %}" class="btn btn-info d-flex align-items-center">
+            <i class="bi bi-plus fs-5"></i>Criar Documento
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if not documents %}
+<p>Nenhum documento foi encontrado.</p>
+{% else %}
+<section class="table-responsive">
+    <table class="table table-bordered">
+        <caption>Lista de Documentos</caption>
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nome</th>
+                <th scope="col">Arquivo</th>
+                <th scope="col">Criado em</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in documents %}
+            <tr>
+                <th scope="row">{{ document.id }}</th>
+                <td>{{ document.name }}</td>
+                <td><a href="{{ document.file.url }}">{{ document.file }}</a></td>
+                <td>{{ document.created_at }}</td>
+                <td>
+                    <a href="{% url 'document_detail' document.id %}" class="btn btn-info btn-sm"><i class="bi bi-eye"></i></a>
+                    {% if perms.documents.change_document %}
+                    <a href="{% url 'document_update' document.id %}" class="btn btn-warning btn-sm"><i class="bi bi-pen"></i></a>
+                    {% endif %}
+                    {% if perms.documents.delete_document %}
+                    <a href="{% url 'document_delete' document.id %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+{% include 'components/_pagination.html' with page_name='page' %}
+{% endif %}
+
+{% endblock %}

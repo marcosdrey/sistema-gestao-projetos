@@ -1,0 +1,124 @@
+<div class="card">
+    <div class="card-header">
+        <h2>Projetos</h2>
+    </div>
+    <div class="card-body">
+        {% if total_delayed_projects > 0 %}
+        <div class="alert alert-danger" role="alert">
+            Atenção: Há {{ total_delayed_projects }} projeto(s) atrasado(s). <a href="{% url 'project_list' %}?state=delayed">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        {% if total_imminent_projects > 0 %}
+        <div class="alert alert-warning" role="alert">
+            Atenção: Há {{ total_imminent_projects }} projeto(s) que estão chegando próximo ao seu prazo final. <a href="{% url 'project_list' %}?state=imminent">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        {% if total_projects_by_status.PAUSED > 0 %}
+        <div class="alert alert-secondary" role="alert">
+            Atenção: Há {{ total_projects_by_status.PAUSED }} projeto(s) que estão pausados. <a href="{% url 'project_list' %}?status=PAUSED">Clique aqui para ver quais são.</a>
+        </div>
+        {% endif %}
+        <div class="row mb-2">
+            <div class="col-md-3">
+                <div class="card bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_projects_by_status.TOTAL }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Concluídos</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_projects_by_status.DONE }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title">Desenvolvendo</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_projects_by_status.DEVELOPING }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">A fazer</h5>
+                        <p class="card-text text-white fw-bold display-6">{{ total_projects_by_status.TO_DO }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center align-items-center my-4">
+            <div class="col-lg-6 col-md-12 text-center">
+                <h5 class="mb-3">Projetos por Prioridade</h5>
+                <div class="embed-responsive embed-responsive-1by1" style="width: 300px; display: inline-block; height: 300px;">
+                    <canvas id="priority_chart" class="embed-responsive-item"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12 text-center">
+                <h5 class="mb-3">Total de Atividade em Projetos</h5>
+                <div class="embed-responsive embed-responsive-1by1" style="width: 500px; display: inline-block;">
+                    <canvas id="daily_project_log_chart" class="embed-responsive-item"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', ()=> {
+        const ctxPriority = document.getElementById('priority_chart').getContext('2d')
+        const totalProjectsByPriority = JSON.parse('{{ total_projects_by_priority|safe }}')
+        const priorityChart = new Chart(ctxPriority, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(totalProjectsByPriority),
+                datasets: [{
+                    label: 'Projetos por Prioridade',
+                    data: Object.values(totalProjectsByPriority),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+            }
+        })
+
+        const ctxProjectsLogs = document.getElementById('daily_project_log_chart').getContext('2d')
+        const dailyTotalProjectsLogs = JSON.parse('{{ daily_total_projects_logs|safe }}')
+        const projectsLogsChart = new Chart(ctxProjectsLogs, {
+            type: 'bar',
+            data: {
+                labels: dailyTotalProjectsLogs.dates,
+                datasets: [{
+                    label: 'Atividade diária de projetos',
+                    data: dailyTotalProjectsLogs.values,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        })
+    })
+</script>

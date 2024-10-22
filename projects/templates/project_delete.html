@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Deletar Projeto{% endblock %}
+
+{% block content %}
+<div class="container float-start card mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Tem certeza que deseja deletar esse projeto?</h3>
+        <h5 class="fst-italic text-muted mb-4">{{ object.title }}</h5>
+        <p class="mb-1 fs-6">Aviso: Essa ação é irreversível e todas as informações relacionadas a esse projeto serão excluídos do banco de dados.</p>
+        <form action="{% url 'project_delete' object.id %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Deletar</button>
+                <a href="{% url 'project_detail' object.id %}" class="btn btn-light">Voltar para os detalhes do projeto</a>
+            </div>
+        </form>
+    </div> 
+</div>
+
+{% endblock %}

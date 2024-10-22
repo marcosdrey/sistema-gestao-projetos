@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-between align-items-center">
+    <div class="col-md-6 col-12">
+        <h1>Bem-vindo(a) ao SGP!</h1>
+    </div>
+    {% if perms.projects.view_project %}
+    <div class="col-md-6 col-12 d-flex justify-content-end">
+        <button class="btn btn-primary show-calendar-btn">Mostrar calendário</button>
+    </div>
+</div>
+
+<div class="my-3">
+    <div class="container">
+        <div id="calendar" class="my-2"></div>
+    </div>
+</div>
+{% include 'components/_projects_metrics.html' %}
+<div class="mb-5"></div>
+{% endif %}
+
+{% if perms.tasks.view_task %}
+{% include 'components/_tasks_metrics.html' %}
+<div class="mb-5"></div>
+{% endif %}
+
+{% if perms.documents.view_document %}
+{% include 'components/_docs_metrics.html' %}
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% if perms.projects.view_project %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarElement = document.querySelector('#calendar')
+        const calendarData =  JSON.parse('{{ calendar_data|safe }}')
+        const calendarEvents = calendarData.map(data => {
+            return {
+                title: data.title,
+                start: data.deadline,
+                allDay: true,
+                color: data.color
+            }
+        })
+
+        const calendar = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            events: calendarEvents,
+            aspectRatio: 2,
+            locale: 'pt-br',
+            buttonText: {
+                today: 'Hoje'
+            }
+        })
+        calendar.render()
+
+        // Don't add the class 'd-none' directly in the HTML element, because it bugs the calendar render.
+        calendarElement.parentNode.classList.add('d-none')
+
+        const showCalendarBtn = document.querySelector('.show-calendar-btn')
+        showCalendarBtn.addEventListener('click', ()=>{
+            if(calendarElement.parentNode.classList.contains('d-none')){
+                calendarElement.parentNode.classList.remove('d-none')
+                showCalendarBtn.textContent = 'Fechar calendário'
+            } else {
+                calendarElement.parentNode.classList.add('d-none')
+                showCalendarBtn.textContent = 'Mostrar calendário'
+            }
+        })
+    })
+
+
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Deletar Membro{% endblock %}
+
+{% block content %}
+<div class="container float-start card mb-4">
+    <div class="card-body">
+        <h3 class="card-title">Tem certeza que deseja remover esse usuário do projeto?</h3>
+
+        <form action="{% url 'project_member_delete' object.id %}" method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Deletar</button>
+                <a href="{% url 'project_detail' object.project.id %}" class="btn btn-light">Voltar para os detalhes do projeto.</a>
+            </div>
+        </form>
+    </div> 
+</div>
+
+{% endblock %}

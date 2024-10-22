@@ -1,0 +1,37 @@
+<div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+    <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+            <li>
+                <a href="{% url 'home' %}" class="nav-link px-0 align-middle text-info">
+                    <i class="fs-4 bi-speedometer2"></i> <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'project_list' %}" class="nav-link align-middle px-0 text-info">
+                    <i class="fs-4 bi bi-folder2"></i> <span class="ms-1 d-none d-sm-inline">Projetos</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'task_list' %}" class="nav-link px-0 align-middle text-info">
+                    <i class="fs-4 bi bi-list-task"></i> <span class="ms-1 d-none d-sm-inline">Tarefas</span></a>
+            </li>
+            {% if perms.documents.view_document %}
+            <li>
+                <a href="{% url 'document_list' %}" class="nav-link px-0 align-middle text-info">
+                    <i class="fs-4 bi bi-file-earmark-fill"></i> <span class="ms-1 d-none d-sm-inline">Documentos</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li>
+                <form action="{% url 'logout' %}" method="post" class="nav-link px-0 align-middle text-info">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link text-decoration-none nav-link text-info px-0 align-middle">
+                        <i class="fs-4 bi bi-box-arrow-right"></i> <span class="ms-1 d-none d-sm-inline">Sair</span>
+                    </button>
+                </form>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
