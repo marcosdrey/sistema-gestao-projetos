@@ -24,6 +24,13 @@ Feito isso, instale as dependências obrigatórias do projeto:<br> <code>pip ins
 
 *Opcional: Instale as dependências de desenvolvedor (como o linter do projeto): <br> <code>pip install -r requirements_dev.txt</code>*
 
+**IMPORTANTE: Antes de partir para o próximo passo, é essencial que você crie um banco de dados no PostgreSQL, e coloque os dados correspondentes em um arquivo de variáveis de ambiente (como .env), para que assim o Django possa se conectar com o seu banco de dados. Caso você não queira fazer todo esse processo, modifique o arquivo settings.py para utilizar o .sqlite3 local que o próprio Django gera. Para fazer isso, vá no arquivo 'settings.py', encontre a variável 'DATABASES' e substitua por: <br><code>DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}</code>**
+
 Após a instalação, migre os modelos executando:<br> <code>python manage.py migrate</code>
 
 E finalmente, você pode rodar o servidor:<br> <code>python manage.py runserver</code>
@@ -55,6 +62,13 @@ Wait for the installation, and then activate it. The code to do this will depend
 Once done, install the project's mandatory dependencies:<br> <code>pip install -r requirements.txt</code>
 
 *Optional: Install the developer dependencies (such as the project's linter): <br> <code>pip install -r requirements_dev.txt</code>*
+
+**IMPORTANT: Before proceeding to the next step, it is essential that you create a database in PostgreSQL and place the corresponding data in an environment variables file (such as .env), so that Django can connect to your database. If you don't want to go through this process, modify the settings.py file to use the local .sqlite3 file that Django generates by default. To do this, go to the 'settings.py' file, find the 'DATABASES' variable, and replace it with: <br><code>DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}</code>**
 
 After the installation, migrate the models by running:<br> <code>python manage.py migrate</code>
 
