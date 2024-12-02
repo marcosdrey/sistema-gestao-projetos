@@ -1,0 +1,10 @@
+.env
+.venv
+env/
+venv/
+.git
+.gitignore
+__pycache__/
+*.sqlite3
+media
+media/
